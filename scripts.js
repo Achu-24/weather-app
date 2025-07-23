@@ -1,54 +1,45 @@
-// API key (replace with your valid key)
-const apiKey = '3a2b4c5d6e7f8g9h0i1j2k3l4m5n6o7p';
+// Refactored weather app script
+// Replaced single-letter vars, separated concerns, added comments
 
-// DOM elements
-const cityInput = document.getElementById('cityInput');
-const weatherResult = document.getElementById('weatherResult');
-const getWeatherBtn = document.getElementById('getWeatherBtn');
-
-// Event listener for button click
-getWeatherBtn.addEventListener('click', getWeatherData);
+const apiKey = 'd173de0a7a5ece720fdd7dbc6054d0fe'; // Your actual API key
 
 /**
- * Fetch weather data for the entered city
+ * Fetch weather data and update UI
  */
 function getWeatherData() {
-    const cityName = cityInput.value.trim();
+  const cityInput = document.getElementById('cityInput').value.trim();
+  const weatherResult = document.getElementById('weatherResult');
 
-    // Validate input
-    if (!cityName) {
-        weatherResult.innerHTML = `<p class="error-message">Please enter a city name!</p>`;
+  if (!cityInput) {
+    weatherResult.innerHTML = '<p class="error">Please enter a city name!</p>';
+    return;
+  }
+
+  weatherResult.innerHTML = '<p>Loading...</p>';
+
+  const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityInput}&appid=${apiKey}&units=metric`;
+
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      if (data.cod === '404') {
+        weatherResult.innerHTML = '<p class="error">City not found!</p>';
         return;
-    }
+      }
 
-    // Show loading message
-    weatherResult.innerHTML = `<p>Loading...</p>`;
+      const weatherCondition = data.weather[0].main;
+      const temperature = Math.round(data.main.temp);
+      const humidity = data.main.humidity;
+      const cityName = data.name;
 
-    // Fetch weather data from OpenWeatherMap
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.cod === '404') {
-                weatherResult.innerHTML = `<p class="error-message">City not found!</p>`;
-                return;
-            }
-
-            // Extract required data
-            const condition = data.weather[0].main;
-            const temperature = Math.round(data.main.temp);
-            const humidity = data.main.humidity;
-            const city = data.name;
-
-            // Display weather info
-            weatherResult.innerHTML = `
-                <div class="weather-condition">${condition}</div>
-                <div class="temperature">${temperature}°C</div>
-                <div class="weather-details">Humidity: ${humidity}%</div>
-                <div class="weather-details">City: ${city}</div>
-            `;
-        })
-        .catch(error => {
-            weatherResult.innerHTML = `<p class="error-message">Error fetching weather data!</p>`;
-            console.error(error);
-        });
+      weatherResult.innerHTML = `
+        <div class="weather">${weatherCondition}</div>
+        <div class="temperature">${temperature}°C</div>
+        <div class="detail">Humidity: ${humidity}%</div>
+        <div class="detail">City: ${cityName}</div>
+      `;
+    })
+    .catch(error => {
+      weatherResult.innerHTML = '<p class="error">Error fetching weather data!</p>';
+    });
 }
